@@ -1,0 +1,116 @@
+buildscript {
+    ext {
+        queryDslVersion = "5.0.0"
+    }
+} // 쿼리dsl 버전 관리 (http://www.querydsl.com)
+//워크북 교재 447쪽 이후 참고
+// 쿼리dsl Qdomain 셍성 -> Gradle -> Tasks -> other -> complieJava
+// 쿼리dsl Qdomain 셍성 오류시 Gradle -> Tasks -> build -> Clean -> 셍성
+
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '3.1.10'
+    id 'io.spring.dependency-management' version '1.1.4'
+    // 사용안 함 id 'com.ewerk.gradle.plugins.querydsl' version '1.0.10' //쿼리dsl 관련 설정 추가
+
+}
+
+group = 'org.zerock'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    annotationProcessor 'org.projectlombok:lombok'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client 마리아 db 연결용
+    implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '3.3.3'
+
+    //테스트 코드에서 롬복 사용 가능하게 설정
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor	'org.projectlombok:lombok'
+
+    // 날짜 처리관련 코드 추가
+    // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-java8time
+    implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-java8time', version: '3.0.4.RELEASE'
+    // 안됨 compile group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-java8time'
+
+    //쿼리dsl 관련 설정 추가
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
+
+    annotationProcessor(//쿼리dsl 관련 설정 추가
+
+            // 톰켓 9 용 "javax.persistence:javax.persistence-api",
+            // 톰켓 9 용 "javax.annotation:javax.annotation-api",
+            // 톰켓 9 용 "com.querydsl:querydsl-apt:${queryDslVersion}:jpa"
+
+            // 톰켓 10 용
+            "jakarta.persistence:jakarta.persistence-api",
+            "jakarta.annotation:jakarta.annotation-api",
+            "com.querydsl:querydsl-apt:${queryDslVersion}:jakarta"
+    )
+    implementation 'org.modelmapper:modelmapper:3.1.0'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // https://mvnrepository.com/artifact/net.coobird/thumbnailator 섬네일 처리
+    // 안됨 compile group: 'net.coobird', name: 'thumbnailator', version: '0.4.12'
+    implementation 'net.coobird:thumbnailator:0.4.16'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+//쿼리dsl 관련 설정 추가
+//def querydslDir = "$buildDir/generated/querydsl"
+
+// 톰켓 9 용 querydsl {
+//    jpa = true
+//    querydslSourcesDir = querydslDir
+//}
+
+sourceSets {
+    // 톰켓 9용 main.java.srcDir querydslDir
+
+    // 톰켓 10용
+    main {
+        java {
+            srcDirs = ["$projectDir/src/main/java", "$projectDir/build/generated"]
+        }
+    }
+
+}
+
+
+compileJava.dependsOn('clean') // 톰켓 10용
+// 톰켓 9용
+//configurations {
+//    querydsl.extendsFrom compileClasspath
+//}
+
+// 톰켓 9용
+//compileQuerydsl {
+//    options.annotationProcessorPath = configurations.querydsl
+//}
